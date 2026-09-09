@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.pyc
+*.db
+*.db-wal
+*.db-shm
+.vscode/
+.idea/
+config.json.bad
+.buildenv/
+build/
+dist/
+version_info.txt
+*.spec.bak
+
+# Internal working document, kept local. See README for architecture notes.
+HANDOFF.md

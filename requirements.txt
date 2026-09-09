@@ -1,0 +1,12 @@
+# The interface. Qt widgets, drawn natively — no browser engine, no WebView2.
+# Essentials rather than the full PySide6 because QtWebEngine is not used and
+# would add several hundred megabytes for nothing.
+PySide6-Essentials>=6.7,<7
+
+# The optional web server, for reaching a running survey from another machine.
+# The desktop application does not need these and will start without them.
+fastapi>=0.110,<1.0
+uvicorn[standard]>=0.27,<1.0
+
+# Optional: GPS tagging for wardriving. Install if you have a serial receiver.
+# pyserial>=3.5

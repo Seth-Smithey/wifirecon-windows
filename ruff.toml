@@ -1,0 +1,45 @@
+# Linting for wifirecon-win.
+#
+# Most of the codebase sits under 100 columns. 120 is the ceiling, which lets
+# the port and detection description tables keep one entry per line.
+line-length = 120
+target-version = "py310"
+
+[lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+
+ignore = [
+    # `try: ... except: pass` is deliberate throughout. A survey tool keeps
+    # scanning when one adapter, one IE parser or one exporter misbehaves.
+    # contextlib.suppress would be equivalent, not clearer.
+    "SIM105",
+    # Percent-formatting is used to build SQL IN-clause placeholder lists,
+    # where the interpolated text is only ever "?,?,?". Values stay
+    # parameterised; rewriting these as f-strings would read as if they
+    # were not.
+    "UP031",
+    # SIM102/108/110 rewrite readable nested conditionals into one-liners.
+    # That is a style preference, not a defect; the explicit form is kept.
+    "SIM102",
+    "SIM108",
+    "SIM110",
+]
+
+[lint.per-file-ignores]
+# Packages that exist to expose a flat namespace.
+"__init__.py" = ["F401"]
+# FastAPI's Depends()/Body()/Query() in argument defaults is the framework's
+# documented idiom, not a mutable-default bug.
+"app/api/routes.py" = ["B008"]
+# Qt's QModelIndex() in argument defaults is likewise the framework's own
+# signature for QAbstractItemModel overrides.
+"app/ui/models.py" = ["B008"]
+# Embedded PowerShell and WinRT type names. Wrapping these would mean
+# splitting a script string, which is worse than a long line.
+"app/hotspot.py" = ["E501"]
+# The self-check suite imports inside functions on purpose, to prove each
+# module loads standalone, and binds QApplication without using it.
+"tools/verify.py" = ["F401", "E402", "F841"]
+
+[format]
+quote-style = "double"
