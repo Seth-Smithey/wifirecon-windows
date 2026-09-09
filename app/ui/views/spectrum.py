@@ -52,7 +52,7 @@ class SpectrumView(View):
             Column("count", "APs", width=80,
                    align=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter),
             Column("best_rssi", "Best signal", width=120,
-                   format=lambda v, r: f"{v} dBm" if v is not None else "\u2014",
+                   format=lambda v, r: f"{v} dBm" if v is not None else "—",
                    align=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter),
             Column("avg_utilization", "Reported busy", stretch=True,
                    format=lambda v, r: f"{round(float(v))}%" if v is not None else "",
