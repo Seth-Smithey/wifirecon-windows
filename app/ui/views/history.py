@@ -21,7 +21,7 @@ FEED_LIMIT = 200
 def _duration(value: Any, row: dict) -> str:
     started, ended = row.get("started_at"), row.get("ended_at")
     if not started:
-        return "\u2014"
+        return "—"
     if not ended:
         return "running"
     seconds = float(ended) - float(started)
