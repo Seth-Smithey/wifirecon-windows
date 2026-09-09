@@ -1,0 +1,83 @@
+wifirecon 2.1.0
+Passive wireless survey for Windows
+===================================================================
+
+TWO STEPS TO RUN IT
+-------------------------------------------------------------------
+
+  1.  Double-click   Setup wifirecon.cmd
+      Wait until it says "Setup finished". It downloads Qt, which is
+      about 200 MB, so give it a couple of minutes.
+
+  2.  Double-click   wifirecon.vbs
+      Its own window opens. No browser, no address bar.
+
+That is the whole thing. Setup only ever needs doing once.
+
+
+WHAT YOU NEED FIRST
+-------------------------------------------------------------------
+
+  Python 3.10 or newer, with "Add python.exe to PATH" ticked during
+  installation.  https://www.python.org/downloads/
+
+  A wireless adapter. An external one is better. Nothing is scanned
+  until you pick one and press Start scanning.
+
+
+THE FIRST THING TO KNOW
+-------------------------------------------------------------------
+
+  Scanning is PASSIVE and needs NO network connection. The adapter
+  listens for beacons; it never joins anything and never transmits.
+  You can survey a building you have no credentials for.
+
+  Two screens are the exception, and both say so and both ask first:
+
+    Devices      - sends discovery queries over the network THIS
+                   machine is joined to. Not the survey adapter.
+    My network   - joins a network, and can port-scan it.
+
+  Everything else only listens.
+
+
+THE FIRST THING TO DO
+-------------------------------------------------------------------
+
+  Go to Marks and add your own network names as Trusted.
+
+  The impersonation rules - the ones that catch an evil twin - work
+  by comparing what they hear against that list. With it empty they
+  cannot fire at all. This is the single most common reason the
+  detection that matters most never reports anything.
+
+
+IF IT DOES NOT START
+-------------------------------------------------------------------
+
+  Use   Start wifirecon (console).cmd   instead. It keeps the window
+  open and prints the reason.
+
+  Or run   python -m app --doctor       for a full health check.
+  Or run   python -m tools.verify       for 75 self-checks.
+
+  The log is at:
+    %LOCALAPPDATA%\wifirecon-win\wifirecon.log
+
+
+WHERE TO READ MORE
+-------------------------------------------------------------------
+
+  docs\GUIDE.md          The full guide. Start here.
+  README.md              Overview and what the platform can't do.
+  QUICKSTART.md          Condensed setup and consulting workflow.
+  docs\DETECTIONS.md     Every detection rule, one table each.
+
+
+MAKING AN .EXE TO GIVE SOMEONE
+-------------------------------------------------------------------
+
+  .\build.ps1
+
+  Produces dist\wifirecon\ and a zip beside it. Send them the zip.
+  They will see a SmartScreen warning, because it is unsigned.
