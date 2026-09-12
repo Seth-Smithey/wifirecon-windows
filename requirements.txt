@@ -6,7 +6,7 @@ PySide6-Essentials>=6.7,<7
 # The optional web server, for reaching a running survey from another machine.
 # The desktop application does not need these and will start without them.
 fastapi>=0.110,<1.0
-uvicorn[standard]>=0.27,<1.0
+uvicorn[standard]>=0.52.4,<1.0
 
 # Optional: GPS tagging for wardriving. Install if you have a serial receiver.
 # pyserial>=3.5
