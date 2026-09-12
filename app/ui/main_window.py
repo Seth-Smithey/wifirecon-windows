@@ -772,7 +772,7 @@ class MainWindow(QMainWindow):
         self.status_left = QLabel("")
         self.status_left.setFont(mono_font(11))
         bar.addWidget(self.status_left, 1)
-        self.status_right = QLabel("")
+        self.status_right = QLabel("survey · no network connection needed")
         self.status_right.setFont(mono_font(11))
         bar.addPermanentWidget(self.status_right)
 

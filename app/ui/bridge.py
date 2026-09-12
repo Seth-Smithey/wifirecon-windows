@@ -162,7 +162,15 @@ class ScanBridge(QObject):
         getattr(self, name).emit(dict(payload))
 
     def refresh_status(self) -> None:
-        pool.run(self._read_status, self.status_ready.emit, self._status_failed)
+        pool.run(self._read_status, self._deliver_status, self._status_failed)
+
+    @Slot(object)
+    def _deliver_status(self, payload: dict) -> None:
+        # A QObject slot disconnects when this bridge is destroyed. Connecting
+        # directly to Signal.emit leaves a Python callback pointing at a deleted
+        # signal when an outstanding refresh finishes after the window closes.
+        if self._attached:
+            self.status_ready.emit(payload)
 
     # What counts as "in range" when the engine has not scanned this session.
     RECENT_SECONDS = 300
