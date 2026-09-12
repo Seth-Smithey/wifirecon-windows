@@ -533,7 +533,7 @@ class ScanEngine:
                     config.get("scan", "prefer_description_contains", default=[]),
                 )
             except Exception as exc:
-                self._last_error = str(exc)
+                self._last_error = "Could not list adapters. See the local log for details."
                 log.warning("Could not list adapters: %s", exc)
                 return []
 
@@ -635,13 +635,13 @@ class ScanEngine:
                 self._consecutive_errors = 0
                 self._last_error = None
                 wait_for = interval
-            except Exception as exc:
+            except Exception:
                 self._consecutive_errors += 1
                 self.stats["failures"] += 1
-                self._last_error = str(exc)
-                self._set_phase("error", str(exc)[:120])
+                self._last_error = "Scan failed. See the local log for details."
+                self._set_phase("error", self._last_error)
                 if self._consecutive_errors == 1:
-                    self.note(f"Scan failed: {exc}", "error")
+                    self.note(self._last_error, "error")
                 log.exception("Scan cycle failed (%d in a row)", self._consecutive_errors)
                 backoff_cap = float(config.get("scan", "backoff_max_seconds", default=300))
                 wait_for = min(interval * (2 ** min(self._consecutive_errors, 6)), backoff_cap)

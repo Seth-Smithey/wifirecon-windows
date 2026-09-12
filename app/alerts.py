@@ -124,7 +124,7 @@ class AlertDispatcher:
                 sink(finding, conf)
                 self._last_error.pop(name, None)
             except Exception as exc:
-                self._last_error[name] = str(exc)
+                self._last_error[name] = "Delivery failed. See the local log for details."
                 log.warning("%s sink failed: %s", name, exc)
 
     # -- sinks --------------------------------------------------------------
