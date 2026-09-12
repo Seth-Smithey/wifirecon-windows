@@ -31,7 +31,7 @@ from .config import data_dir
 
 log = logging.getLogger(__name__)
 
-REPO = "Seth-Smithey/wifirecon-win"
+REPO = "Seth-Smithey/wifirecon-windows"
 API_ROOT = f"https://api.github.com/repos/{REPO}"
 USER_AGENT = "wifirecon-win-updater"
 DOWNLOAD_TIMEOUT = 300

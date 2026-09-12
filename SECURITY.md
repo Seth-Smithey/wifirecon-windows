@@ -5,7 +5,7 @@ maintained separately; update to the latest release before reporting a problem.
 
 ## Reporting a vulnerability
 
-Use [GitHub private vulnerability reporting](https://github.com/Seth-Smithey/wifirecon-win/security/advisories/new).
+Use [GitHub private vulnerability reporting](https://github.com/Seth-Smithey/wifirecon-windows/security/advisories/new).
 Do not open a public issue containing credentials, private network names,
 BSSIDs, GPS coordinates, client details, packet captures, or unredacted logs.
 Provide a minimal reproduction using invented network names and synthetic data.

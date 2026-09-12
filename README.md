@@ -51,7 +51,7 @@ natively.
 For source setup, clone this repository with your authenticated Git client:
 
 ```powershell
-git clone https://github.com/Seth-Smithey/wifirecon-win.git
+git clone https://github.com/Seth-Smithey/wifirecon-windows.git
 cd wifirecon-win
 cmd /c "Setup wifirecon.cmd"
 ```
@@ -138,7 +138,7 @@ the install folder contains anything you put there, the folder is left in place.
 ## Building from source
 
 ```powershell
-git clone https://github.com/Seth-Smithey/wifirecon-win.git
+git clone https://github.com/Seth-Smithey/wifirecon-windows.git
 cd wifirecon-win
 .\build.ps1
 ```
