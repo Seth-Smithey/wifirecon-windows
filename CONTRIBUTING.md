@@ -33,9 +33,19 @@ Never distribute just the executable from a folder build.
 
 For a release, update `VERSION`, commit and push the tested change, create and
 push the matching `vVERSION` tag, then run `./build.ps1 -Release` with the GitHub
-CLI authenticated. It requires the tag to already exist. Uploading a release
-does not make this private repository public.
+CLI authenticated. It requires the tag to already exist.
 
 Folder packages currently require manual download and extraction to update.
 The application has no GitHub authentication for private release downloads;
-use your signed-in browser. Source checkouts can use authenticated Git.
+use your signed-in browser if access requires it. Source checkouts can use authenticated Git.
+
+## Security and privacy checks
+
+Run `python -m bandit -r app --severity-level high` and
+`python -m pip_audit -r requirements.txt` before changes that affect dependencies
+or network-facing code. CI also scans fetched Git history with Gitleaks.
+CodeQL and dependency review activate when the repository is public.
+
+Use generic `Example_` network names and locally administered MAC addresses in
+fixtures. Never include actual SSIDs, BSSIDs, client names, GPS coordinates, or
+real configuration files. See [SECURITY.md](SECURITY.md) before sharing logs.

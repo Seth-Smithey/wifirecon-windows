@@ -1,0 +1,97 @@
+name: Security
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+  schedule:
+    - cron: '23 8 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install checksum-verified Gitleaks
+        shell: bash
+        working-directory: ${{ runner.temp }}
+        run: |
+          curl --fail --silent --show-error --location --output gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          printf '%s  gitleaks.tar.gz\n' '551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb' | sha256sum --check
+          mkdir gitleaks-bin
+          tar -xzf gitleaks.tar.gz -C gitleaks-bin gitleaks
+      - name: Scan all fetched history
+        run: '"$RUNNER_TEMP/gitleaks-bin/gitleaks" git . --log-opts="--all" --redact'
+
+  dependencies:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.14'
+      - run: python -m pip install pip-audit==2.10.1
+      - name: Audit dependencies and generate an SBOM
+        run: python -m pip_audit -r requirements.txt --format cyclonedx-json --output dependency-sbom.json
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: dependency-sbom
+          path: dependency-sbom.json
+          retention-days: 14
+
+  python-security:
+    name: Python security
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.14'
+      - run: python -m pip install bandit==1.9.4
+      - name: Record all findings and fail on high severity
+        shell: bash
+        run: |
+          python -m bandit -r app -f json -o bandit.json --exit-zero
+          python -m bandit -r app --severity-level high
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: python-security-report
+          path: bandit.json
+          retention-days: 14
+
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request' && github.event.repository.private == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: moderate
+          comment-summary-in-pr: never

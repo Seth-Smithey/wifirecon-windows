@@ -1,0 +1,25 @@
+name: Bug report
+description: Report a reproducible problem using synthetic data.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Do not include credentials, private network names, MAC addresses, GPS coordinates, or unredacted logs.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and steps to reproduce
+      description: Include expected and actual behavior. Prefer mock mode for examples.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version and Windows version
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Sanitized diagnostics
+      description: Remove identifying network, machine, and user details before posting.

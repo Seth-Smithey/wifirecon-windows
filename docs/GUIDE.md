@@ -664,8 +664,8 @@ The updater looks for releases at the repository named in `app/updater.py`:
 REPO = "Seth-Smithey/wifirecon-win"
 ```
 
-The repository is private. The release updater has no GitHub authentication;
-use a signed-in browser to download releases or Actions artifacts. Folder builds
+The release updater has no GitHub authentication for private releases;
+use a signed-in browser when download access requires it. Folder builds
 require manual extraction of the complete ZIP. Source checkouts can use
 authenticated Git. See [CONTRIBUTING.md](../CONTRIBUTING.md) for the release process.
 

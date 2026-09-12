@@ -182,7 +182,7 @@ FIXTURES: list[dict[str, Any]] = [
      "wps": ("NETGEAR", "R6700", "R6700 AP"), "stations": 3, "util": 22},
     {"bssid": "02:00:00:00:00:07", "ssid": "Example_Network_07", "ch": 3, "band": "2.4",
      "sec": "wpa1", "rssi": -78, "width": 40},
-    {"bssid": "02:00:00:00:00:08", "ssid": "attwifi", "ch": 6, "band": "2.4",
+    {"bssid": "02:00:00:00:00:08", "ssid": "Example_Network_08", "ch": 6, "band": "2.4",
      "sec": "open", "rssi": -39, "beacon": 102},
     {"bssid": "02:00:00:00:00:09", "ssid": "Example_Hоme", "ch": 6, "band": "2.4",
      "sec": "open", "rssi": -37},
