@@ -33,7 +33,7 @@ if ($Background) {
     $pythonw = Join-Path $root '.venv\Scripts\pythonw.exe'
     Start-Process -FilePath $pythonw -ArgumentList $arguments -WorkingDirectory $root `
         -WindowStyle Hidden
-    Write-Host "Started in the background. Open http://127.0.0.1:8722" -ForegroundColor Green
+    Write-Host "Started the desktop application." -ForegroundColor Green
 } else {
     & $venvPython @arguments
     exit $LASTEXITCODE

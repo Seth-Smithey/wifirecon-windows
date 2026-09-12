@@ -15,3 +15,14 @@ version_info.txt
 
 # Internal working document, kept local. See README for architecture notes.
 HANDOFF.md
+
+# Local credentials, survey exports and development caches.
+.env
+.env.*
+!.env.example
+.ruff_cache/
+.pytest_cache/
+*.log
+reports/
+backups/
+.repo-audit/

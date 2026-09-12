@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>wifirecon</title>
+<style>
+  :root {
+    --void:#0a0e14; --panel:#111823; --line:#1e2836; --text:#ccd6e4;
+    --hi:#eaf1fa; --dim:#6b7c93; --dimmer:#465468;
+    --b24:#f0a35e; --b5:#5ec8d8; --b6:#a986e8; --ok:#4ec9a0; --crit:#ff4d6d;
+    --mono:"Cascadia Mono","Cascadia Code",Consolas,ui-monospace,monospace;
+    --ui:"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:var(--void); color:var(--text);
+              font-family:var(--ui); -webkit-font-smoothing:antialiased; }
+  .wrap { height:100%; display:flex; align-items:center; justify-content:center;
+          flex-direction:column; gap:26px; padding:24px; }
+
+  /* The mark is the spectrum ribbon in miniature: three bands, wavelength
+     ordered, filling as the app comes up. */
+  .mark { width:220px; }
+  .mark svg { display:block; width:100%; }
+  .bar { transform-origin:left center; animation:grow 1.6s ease-out infinite; }
+  .bar:nth-child(2) { animation-delay:.18s; }
+  .bar:nth-child(3) { animation-delay:.36s; }
+  .bar:nth-child(4) { animation-delay:.54s; }
+  .bar:nth-child(5) { animation-delay:.72s; }
+  @keyframes grow {
+    0%   { transform:scaleX(.06); opacity:.25; }
+    45%  { transform:scaleX(1);   opacity:1; }
+    100% { transform:scaleX(.06); opacity:.25; }
+  }
+
+  h1 { margin:0; font-size:22px; font-weight:650; letter-spacing:-.02em;
+       color:var(--hi); text-align:center; }
+  .sub { font-family:var(--mono); font-size:11px; letter-spacing:.14em;
+         text-transform:uppercase; color:var(--dimmer); text-align:center;
+         margin-top:5px; }
+  .status { font-family:var(--mono); font-size:12.5px; color:var(--dim);
+            min-height:20px; text-align:center; }
+  .track { width:260px; height:3px; background:var(--line); border-radius:2px;
+           overflow:hidden; }
+  .track i { display:block; height:100%; width:34%; border-radius:2px;
+             background:var(--b5); animation:sweep 1.3s ease-in-out infinite; }
+  @keyframes sweep { 0% { transform:translateX(-110%); }
+                     100% { transform:translateX(330%); } }
+  .hint { font-size:12.5px; color:var(--dimmer); max-width:420px; text-align:center;
+          line-height:1.6; }
+  .hint b { color:var(--dim); font-weight:600; }
+  a.manual { color:var(--b5); text-decoration:none; }
+  a.manual:hover { text-decoration:underline; }
+  .failed .track i { background:var(--crit); animation:none; width:100%; }
+  @media (prefers-reduced-motion: reduce) {
+    .bar, .track i { animation:none; }
+    .bar { transform:scaleX(1); opacity:1; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="mark">
+    <svg viewBox="0 0 220 96" xmlns="http://www.w3.org/2000/svg">
+      <rect class="bar" x="0" y="8"  width="150" height="12" rx="3" fill="#f0a35e"/>
+      <rect class="bar" x="0" y="26" width="196" height="12" rx="3" fill="#f0a35e"/>
+      <rect class="bar" x="0" y="44" width="120" height="12" rx="3" fill="#5ec8d8"/>
+      <rect class="bar" x="0" y="62" width="172" height="12" rx="3" fill="#5ec8d8"/>
+      <rect class="bar" x="0" y="80" width="88"  height="12" rx="3" fill="#a986e8"/>
+    </svg>
+  </div>
+
+  <div>
+    <h1>wifirecon</h1>
+    <div class="sub">windows &middot; passive</div>
+  </div>
+
+  <div class="track"><i></i></div>
+  <div class="status" id="status">Starting the engine&hellip;</div>
+  <div class="hint" id="hint"></div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const PORT = 8722;
+  const BASE = `http://127.0.0.1:${PORT}`;
+  const messages = [
+    "Starting the engine\u2026",
+    "Loading the vendor database\u2026",
+    "Opening the data store\u2026",
+    "Looking for wireless adapters\u2026",
+    "Almost there\u2026",
+  ];
+  const status = document.getElementById("status");
+  const hint = document.getElementById("hint");
+  let tries = 0;
+
+  const poll = setInterval(async () => {
+    tries += 1;
+    status.textContent = messages[Math.min(Math.floor(tries / 4), messages.length - 1)];
+
+    if (tries === 20) {
+      hint.innerHTML = "Taking longer than usual. The first run has to build its "
+        + "database, which is normal.";
+    }
+    if (tries > 60) {
+      clearInterval(poll);
+      document.getElementById("wrap").classList.add("failed");
+      status.textContent = "It did not start.";
+      hint.innerHTML = "Try <b>Start wifirecon.cmd</b> instead \u2014 it shows the log "
+        + "so you can see what went wrong. Or open "
+        + `<a class="manual" href="${BASE}">${BASE}</a> in case it is already running.`;
+      return;
+    }
+
+    try {
+      const response = await fetch(`${BASE}/api/health`, { cache: "no-store" });
+      if (!response.ok) return;
+      clearInterval(poll);
+      status.textContent = "Ready.";
+      location.replace(BASE);
+    } catch {
+      /* not up yet; keep waiting */
+    }
+  }, 500);
+})();
+</script>
+</body>
+</html>

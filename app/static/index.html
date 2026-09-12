@@ -1,0 +1,833 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>wifirecon</title>
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+
+<div class="gate" id="gate" hidden>
+  <div class="gate-inner">
+    <div class="gate-head">
+      <h1>Choose a radio</h1>
+      <p>Nothing is scanned until you start. Pick the adapter to survey with.</p>
+    </div>
+    <div id="gate-adapters" class="adapter-list"></div>
+    <div id="gate-repair" class="repair" hidden></div>
+    <div class="gate-foot">
+      <button class="btn small" id="gate-refresh">Rescan for adapters</button>
+      <button class="btn small" id="gate-fix">Adapter missing? Diagnose &amp; repair</button>
+      <div class="spacer"></div>
+      <span class="mono dim" id="gate-hint"></span>
+      <button class="btn primary" id="gate-start" disabled>Start scanning</button>
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+  <aside class="rail">
+    <div class="brand">
+      <h1>wifirecon</h1>
+      <div class="sub">windows &middot; passive</div>
+    </div>
+    <div class="site-pick">
+      <select id="site-select" title="Active site"><option value="">No site selected</option></select>
+    </div>
+    <nav class="nav" id="nav">
+      <button data-view="live" class="on"><i class="tick"></i>Live<span class="count" id="nav-live">0</span></button>
+      <button data-view="spectrum"><i class="tick"></i>Spectrum</button>
+      <button data-view="findings"><i class="tick"></i>Findings<span class="count" id="nav-findings">0</span></button>
+      <button data-view="ssids"><i class="tick"></i>Networks</button>
+      <button data-view="marks"><i class="tick"></i>Marks</button>
+      <button data-view="history"><i class="tick"></i>Scan log</button>
+      <button data-view="devices"><i class="tick"></i>Devices<span class="count" id="nav-devices"></span></button>
+      <button data-view="network"><i class="tick"></i>My network</button>
+      <button data-view="survey"><i class="tick"></i>Survey</button>
+      <button data-view="report"><i class="tick"></i>Report</button>
+      <button data-view="adapters"><i class="tick"></i>Adapter</button>
+      <button data-view="diagnostics"><i class="tick"></i>Diagnostics</button>
+      <button data-view="settings"><i class="tick"></i>Settings</button>
+    </nav>
+    <div class="rail-foot">
+      <div class="row"><span>build</span><span id="foot-version">&mdash;</span></div>
+      <div class="row"><span>adapter</span><span id="foot-adapter">&mdash;</span></div>
+      <div class="row"><span>store</span><span id="foot-db">&mdash;</span></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <button class="adapter-chip" id="adapter-chip" title="Click to change adapter">
+        <span class="dot" id="pulse-dot"></span>
+        <span class="who">
+          <b id="adapter-name">No adapter</b>
+          <em id="adapter-sub">not scanning</em>
+        </span>
+      </button>
+      <button class="btn primary small" id="btn-startstop">Start scanning</button>
+      <button class="btn small" id="btn-scan">Single scan</button>
+      <div class="phase" id="phase-strip">
+        <span class="phase-label" id="phase-text">idle</span>
+        <span class="phase-bar"><i id="phase-fill"></i></span>
+      </div>
+      <button class="btn small" id="btn-theme" title="Switch between light and dark">
+        Light</button>
+      <button class="btn small danger" id="btn-quit" title="Stop wifirecon">Quit</button>
+      <div class="readouts">
+        <div class="readout"><b id="stat-visible">0</b><span>in range</span></div>
+        <div class="readout"><b id="stat-known">0</b><span>known</span></div>
+        <div class="readout alarm"><b id="stat-open">0</b><span>open findings</span></div>
+      </div>
+    </div>
+
+    <!-- LIVE -->
+    <section class="view" id="view-live">
+      <div class="toolbar">
+        <input type="text" id="live-search" placeholder="Filter by name, BSSID or vendor" style="width:280px">
+        <select id="live-band">
+          <option value="">All bands</option>
+          <option value="2.4">2.4 GHz</option>
+          <option value="5">5 GHz</option>
+          <option value="6">6 GHz</option>
+        </select>
+        <select id="live-window">
+          <option value="5">Seen in last 5 min</option>
+          <option value="15">Last 15 min</option>
+          <option value="60">Last hour</option>
+          <option value="1440">Last 24 hours</option>
+          <option value="">Everything ever seen</option>
+        </select>
+        <label class="chip" style="cursor:pointer">
+          <input type="checkbox" id="live-flagged" style="margin:0"> Flagged only
+        </label>
+        <div class="spacer"></div>
+        <span class="mono dim" id="live-count"></span>
+      </div>
+      <div class="table-wrap">
+        <table id="live-table">
+          <thead><tr>
+            <th class="sortable" data-sort="rssi">Signal</th>
+            <th class="sortable" data-sort="ssid">Name</th>
+            <th class="sortable" data-sort="channel">Band / ch</th>
+            <th>Security</th>
+            <th>PHY</th>
+            <th class="sortable" data-sort="bssid">BSSID</th>
+            <th>Vendor</th>
+            <th class="right">Load</th>
+            <th class="right sortable" data-sort="last_seen">Seen</th>
+          </tr></thead>
+          <tbody id="live-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SPECTRUM -->
+    <section class="view" id="view-spectrum" hidden>
+      <div class="toolbar">
+        <select id="spectrum-window">
+          <option value="5">Last 5 min</option>
+          <option value="15" selected>Last 15 min</option>
+          <option value="60">Last hour</option>
+        </select>
+        <div class="spacer"></div>
+        <span class="mono dim">Width and position are the real occupied spectrum</span>
+      </div>
+      <div id="spectrum-host"></div>
+      <div class="legend">
+        <span><i style="background:var(--b24)"></i>2.4 GHz</span>
+        <span><i style="background:var(--b5)"></i>5 GHz</span>
+        <span><i style="background:var(--b6)"></i>6 GHz</span>
+        <span><i style="background:var(--crit)"></i>flagged</span>
+        <span>Block height tracks signal strength &middot; overlap means contention</span>
+      </div>
+      <div class="card" style="margin-top:18px">
+        <h2>Channel occupancy</h2>
+        <p class="hint">Count of access points per channel, with reported channel utilisation where the AP publishes it.</p>
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th>Band</th><th>Channel</th><th class="right">APs</th>
+            <th class="right">Best signal</th><th class="right">Reported busy</th>
+          </tr></thead><tbody id="channel-rows"></tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINDINGS -->
+    <section class="view" id="view-findings" hidden>
+      <div class="toolbar">
+        <select id="findings-severity">
+          <option value="">All severities</option>
+          <option value="critical">Critical</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+          <option value="info">Info</option>
+        </select>
+        <select id="findings-rule"><option value="">All rules</option></select>
+        <label class="chip" style="cursor:pointer">
+          <input type="checkbox" id="findings-open" checked style="margin:0"> Open only
+        </label>
+        <label class="chip" style="cursor:pointer">
+          <input type="checkbox" id="findings-group" checked style="margin:0"> Group by rule
+        </label>
+        <div class="spacer"></div>
+        <button class="btn small" id="btn-ack-all">Acknowledge all</button>
+        <button class="btn small" id="btn-unack-all">Reopen acknowledged</button>
+        <button class="btn small danger" id="btn-clear-findings">Clear&hellip;</button>
+        <a class="btn small" href="/api/export/alerts.csv">Export CSV</a>
+      </div>
+      <div id="findings-list"></div>
+    </section>
+
+    <!-- SSIDS -->
+    <section class="view" id="view-ssids" hidden>
+      <div class="toolbar">
+        <input type="text" id="group-search" placeholder="Filter by name, BSSID or vendor"
+               style="width:280px">
+        <select id="group-band">
+          <option value="">All bands</option>
+          <option value="2.4">Has 2.4 GHz</option>
+          <option value="5">Has 5 GHz</option>
+          <option value="6">Has 6 GHz</option>
+        </select>
+        <select id="group-window">
+          <option value="15">Last 15 min</option>
+          <option value="60" selected>Last hour</option>
+          <option value="1440">Last 24 hours</option>
+          <option value="">Everything</option>
+        </select>
+        <label class="chip" style="cursor:pointer">
+          <input type="checkbox" id="group-multiband" style="margin:0"> Multi-band only
+        </label>
+        <div class="spacer"></div>
+        <span class="mono dim" id="group-count"></span>
+      </div>
+      <p class="hint" style="margin:-4px 0 14px">
+        One row per network name. A tri-band access point puts the same name on
+        2.4, 5 and 6 GHz with a different BSSID on each, so this is the count
+        that reflects how many networks are really around you.
+      </p>
+      <div id="group-list"></div>
+    </section>
+
+    <!-- MARKS -->
+    <section class="view" id="view-marks" hidden>
+      <div class="grid two">
+        <div class="card">
+          <h2>Add a mark</h2>
+          <p class="hint">Watch raises the stakes on a network, trusted teaches the lookalike rules what the real thing is, and ignore silences a source of noise.</p>
+          <div class="field">
+            <label for="mark-kind">What kind</label>
+            <select id="mark-kind">
+              <option value="watch">Watch &mdash; alert me about changes</option>
+              <option value="trusted">Trusted &mdash; this is mine</option>
+              <option value="ignore">Ignore &mdash; stop flagging this</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="mark-type">Match on</label>
+            <select id="mark-type">
+              <option value="ssid">Network name</option>
+              <option value="bssid">Exact BSSID</option>
+              <option value="oui">Vendor prefix (OUI)</option>
+              <option value="ssid_prefix">Name starts with</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="mark-value">Value</label>
+            <input type="text" id="mark-value" placeholder="Example_Home">
+          </div>
+          <div class="field">
+            <label for="mark-label">Note (optional)</label>
+            <input type="text" id="mark-label" placeholder="Main house AP">
+          </div>
+          <button class="btn primary" id="btn-add-mark">Add mark</button>
+        </div>
+        <div class="card">
+          <h2>Current marks</h2>
+          <p class="hint">Trusted names are what lookalike detection compares against, so add your own networks here first.</p>
+          <div class="table-wrap">
+            <table><thead><tr><th>Kind</th><th>Match</th><th>Value</th><th>Note</th><th></th></tr></thead>
+            <tbody id="mark-rows"></tbody></table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HISTORY -->
+    <section class="view" id="view-history" hidden>
+      <div class="card">
+        <h2>Scan log</h2>
+        <p class="hint">Every cycle the engine ran, what it saw and how long it took.</p>
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th>Started</th><th class="right">Networks</th><th class="right">New</th>
+            <th class="right">Findings</th><th class="right">Took</th><th>Result</th>
+          </tr></thead><tbody id="scan-rows"></tbody></table>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Exports</h2>
+        <p class="hint">Everything the app has stored, in formats other tools read.</p>
+        <div class="toolbar" id="export-links"></div>
+      </div>
+    </section>
+
+    <!-- DEVICES -->
+    <section class="view" id="view-devices" hidden>
+      <div class="toolbar">
+        <button class="btn primary" id="btn-discover">Discover devices</button>
+        <input type="text" id="device-search" placeholder="Filter by name, IP, MAC or vendor"
+               style="width:280px">
+        <select id="device-category"><option value="">All types</option></select>
+        <div class="spacer"></div>
+        <span class="mono dim" id="device-count"></span>
+        <button class="btn small danger" id="btn-forget-devices">Forget all</button>
+      </div>
+      <p class="hint" style="margin:-4px 0 14px">
+        Wi-Fi client devices are invisible to a passive survey &mdash; their frames are
+        not addressed to us. This finds what is reachable on the networks this machine
+        is actually attached to, using ARP, DNS, mDNS, SSDP and NetBIOS, plus Bluetooth
+        radios Windows knows about.
+      </p>
+      <div id="discover-status"></div>
+      <div class="table-wrap">
+        <table><thead><tr>
+          <th>Device</th><th>Type</th><th>IP</th><th>MAC</th><th>Vendor</th>
+          <th>Seen via</th><th class="right">Times</th><th class="right">Last seen</th>
+        </tr></thead><tbody id="device-rows"></tbody></table>
+      </div>
+      <div class="card" id="bluetooth-card" hidden style="margin-top:16px">
+        <h2>Bluetooth</h2>
+        <p class="hint">Radios Windows has paired with or has drivers for.</p>
+        <div class="table-wrap">
+          <table><thead><tr><th>Name</th><th>Address</th><th>Vendor</th>
+            <th>Status</th></tr></thead><tbody id="bluetooth-rows"></tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- MY NETWORK -->
+    <section class="view" id="view-network" hidden>
+      <div class="grid two">
+        <div class="card">
+          <h2>Connection</h2>
+          <p class="hint">Join a network so it can be examined from the inside. Useful
+          for looking at your own IoT or guest segment.</p>
+          <div id="connection-state"></div>
+          <div class="field">
+            <label for="connect-ssid">Network</label>
+            <select id="connect-ssid"><option value="">Saved networks&hellip;</option></select>
+          </div>
+          <div class="field">
+            <label for="connect-manual">Or type a name</label>
+            <input type="text" id="connect-manual" placeholder="Example_Network_03">
+          </div>
+          <div class="field">
+            <label for="connect-pass">Passphrase (only if not already saved)</label>
+            <input type="password" id="connect-pass" placeholder="Leave blank to use the saved profile">
+          </div>
+          <div class="toolbar">
+            <button class="btn primary" id="btn-connect">Connect</button>
+            <button class="btn" id="btn-disconnect">Disconnect</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Audit this network</h2>
+          <p class="hint">Finds what is on the local subnet and checks each host for
+          common services, then flags plaintext management, exposed databases and
+          anything else worth fixing.</p>
+          <div class="warn-note" style="margin-bottom:12px">
+            This one connects to services rather than just listening. Only run it on a
+            network you are responsible for.
+          </div>
+          <div class="field inline">
+            <input type="checkbox" id="audit-thorough">
+            <label for="audit-thorough">Thorough (slower, more ports)</label>
+          </div>
+          <button class="btn primary" id="btn-audit">Run audit</button>
+          <div class="note" id="audit-status"></div>
+        </div>
+      </div>
+
+      <div id="audit-findings"></div>
+      <div class="card" id="audit-hosts-card" hidden>
+        <h2>Hosts</h2>
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th>Host</th><th>IP</th><th>Vendor</th><th>Open services</th>
+          </tr></thead><tbody id="audit-hosts"></tbody></table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Share your connection</h2>
+        <p class="hint">Turn this machine into an access point. On the road, connect
+        upstream Wi-Fi, bring your VPN up, then share the VPN adapter &mdash; every
+        device that joins is inside the tunnel, and the venue only sees one client.</p>
+        <div id="hotspot-state"></div>
+        <div class="grid three" style="gap:10px">
+          <div class="field">
+            <label for="hs-ssid">Network name</label>
+            <input type="text" id="hs-ssid" placeholder="smithey-travel">
+          </div>
+          <div class="field">
+            <label for="hs-pass">Passphrase (8+ characters)</label>
+            <input type="password" id="hs-pass">
+          </div>
+          <div class="field">
+            <label for="hs-band">Band</label>
+            <select id="hs-band">
+              <option value="auto">Automatic</option>
+              <option value="2.4">2.4 GHz (better range)</option>
+              <option value="5">5 GHz (faster)</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="hs-source">Share this connection (pick your VPN adapter)</label>
+          <select id="hs-source"><option value="">Choose an adapter&hellip;</option></select>
+        </div>
+        <div class="toolbar">
+          <button class="btn" id="btn-hs-configure">Save settings</button>
+          <button class="btn primary" id="btn-hs-start">Start hotspot</button>
+          <button class="btn danger" id="btn-hs-stop">Stop</button>
+          <button class="btn small" id="btn-hs-share">Apply sharing</button>
+        </div>
+        <div id="hotspot-advice"></div>
+      </div>
+    </section>
+
+    <!-- SURVEY -->
+    <section class="view" id="view-survey" hidden>
+      <div class="grid two">
+        <div class="card">
+          <h2>Capture a location</h2>
+          <p class="hint">Stand where you want measured, name it, and capture. Each
+          capture records every network audible from that spot, so you can show a
+          client exactly where coverage falls away.</p>
+          <div class="field">
+            <label for="point-name">Location name</label>
+            <input type="text" id="point-name" placeholder="Reception, Warehouse, Suite 204">
+          </div>
+          <div class="grid three" style="gap:10px">
+            <div class="field">
+              <label for="point-floor">Floor</label>
+              <input type="text" id="point-floor" placeholder="1">
+            </div>
+            <div class="field" style="grid-column:span 2">
+              <label for="point-notes">Notes</label>
+              <input type="text" id="point-notes" placeholder="Near the lift shaft">
+            </div>
+          </div>
+          <button class="btn primary" id="btn-capture">Scan here and record</button>
+          <div class="note" id="capture-status"></div>
+        </div>
+
+        <div class="card">
+          <h2>Captured locations</h2>
+          <p class="hint">Signal grade is the strongest network audible at each point.</p>
+          <div class="table-wrap">
+            <table><thead><tr>
+              <th>Location</th><th>Floor</th><th class="right">Networks</th>
+              <th>Best signal</th><th class="right">Captured</th><th></th>
+            </tr></thead><tbody id="point-rows"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Coverage matrix</h2>
+        <p class="hint">Signal in dBm for every network at every location. Above
+        &minus;67 supports voice; below &minus;72 is unreliable.</p>
+        <div class="table-wrap"><div id="coverage-table"></div></div>
+        <div id="coverage-recs"></div>
+      </div>
+
+      <div class="grid two">
+        <div class="card">
+          <h2>Channel plan</h2>
+          <p class="hint">Where to put new access points, scored on how contended each
+          channel is right now.</p>
+          <div id="plan-output"></div>
+        </div>
+        <div class="card">
+          <h2>Before and after</h2>
+          <p class="hint">Snapshot the air now, make your changes, then compare. Useful
+          for proving remediation actually landed.</p>
+          <div class="field">
+            <label for="snap-name">Snapshot name</label>
+            <input type="text" id="snap-name" placeholder="Before AP replacement">
+          </div>
+          <button class="btn" id="btn-snapshot">Take snapshot</button>
+          <div class="table-wrap" style="margin-top:14px">
+            <table><thead><tr><th>Name</th><th class="right">APs</th>
+              <th class="right">Taken</th><th></th></tr></thead>
+              <tbody id="snapshot-rows"></tbody></table>
+          </div>
+          <div id="diff-output"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Access point inventory</h2>
+        <p class="hint">Label the access points you manage so reports name them properly
+        and anything unlabelled stands out.</p>
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th>Label</th><th>BSSID</th><th>Location</th><th>Asset tag</th>
+            <th>Band / ch</th><th>Status</th><th></th>
+          </tr></thead><tbody id="inventory-rows"></tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- REPORT -->
+    <section class="view" id="view-report" hidden>
+      <div class="grid two">
+        <div class="card">
+          <h2>Client report</h2>
+          <p class="hint">A self-contained HTML report with an executive summary,
+          findings explained in plain language, the channel plan and coverage results.
+          Open it and print to PDF.</p>
+          <div class="field">
+            <label for="report-title">Report title</label>
+            <input type="text" id="report-title" value="Wireless Site Survey">
+          </div>
+          <div class="field">
+            <label for="report-by">Prepared by</label>
+            <input type="text" id="report-by" placeholder="Your name, company">
+          </div>
+          <div class="field">
+            <label for="report-window">Include data from</label>
+            <select id="report-window">
+              <option value="60">The last hour</option>
+              <option value="480">The last 8 hours</option>
+              <option value="1440" selected>The last 24 hours</option>
+              <option value="10080">The last week</option>
+            </select>
+          </div>
+          <div class="field inline"><input type="checkbox" id="report-plan" checked>
+            <label for="report-plan">Include channel plan</label></div>
+          <div class="field inline"><input type="checkbox" id="report-coverage" checked>
+            <label for="report-coverage">Include coverage results</label></div>
+          <div class="field inline"><input type="checkbox" id="report-inventory" checked>
+            <label for="report-inventory">Include AP inventory</label></div>
+          <div class="toolbar" style="margin-top:14px">
+            <button class="btn primary" id="btn-report-open">Open report</button>
+            <button class="btn" id="btn-report-download">Download</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Sites</h2>
+          <p class="hint">Keep client engagements separate. Survey points, inventory and
+          snapshots all belong to the selected site.</p>
+          <div class="field">
+            <label for="new-site-name">Site name</label>
+            <input type="text" id="new-site-name" placeholder="Acme HQ">
+          </div>
+          <div class="grid two" style="gap:10px">
+            <div class="field"><label for="new-site-client">Client</label>
+              <input type="text" id="new-site-client" placeholder="Acme Corp"></div>
+            <div class="field"><label for="new-site-contact">Contact</label>
+              <input type="text" id="new-site-contact"></div>
+          </div>
+          <div class="field"><label for="new-site-address">Address</label>
+            <input type="text" id="new-site-address"></div>
+          <button class="btn" id="btn-add-site">Add site</button>
+          <div class="table-wrap" style="margin-top:14px">
+            <table><thead><tr><th>Site</th><th>Client</th><th class="right">Points</th>
+              <th class="right">APs</th><th></th></tr></thead>
+              <tbody id="site-rows"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Data exports</h2>
+        <p class="hint">Raw data in formats other tools read.</p>
+        <div class="toolbar" id="export-links-2"></div>
+      </div>
+    </section>
+
+    <!-- ADAPTERS -->
+    <section class="view" id="view-adapters" hidden>
+      <div class="toolbar">
+        <button class="btn" id="btn-adapters-refresh">Rescan for adapters</button>
+        <button class="btn" id="btn-adapters-fix">Diagnose &amp; repair</button>
+        <div class="spacer"></div>
+        <span class="mono dim" id="adapter-count"></span>
+      </div>
+      <div id="adapter-cards" class="adapter-list"></div>
+      <div id="adapter-repair" class="repair" hidden></div>
+      <div class="card">
+        <h2>Session activity</h2>
+        <p class="hint">What the engine has been doing, newest last.</p>
+        <div id="activity-feed" class="feed"></div>
+      </div>
+      <div class="card">
+        <h2>Previous sessions</h2>
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th>Started</th><th>Adapter</th><th class="right">Scans</th>
+            <th class="right">Networks</th><th class="right">Findings</th><th>Length</th>
+          </tr></thead><tbody id="session-rows"></tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- DIAGNOSTICS -->
+    <section class="view" id="view-diagnostics" hidden>
+      <div class="toolbar">
+        <button class="btn" id="btn-diag-refresh">Re-run checks</button>
+        <button class="btn" id="btn-check-updates">Check for updates</button>
+        <button class="btn" id="btn-apply-update" hidden>Install update</button>
+        <div class="spacer"></div>
+        <button class="btn small" id="btn-prune">Prune old data</button>
+        <button class="btn small" id="btn-compact">Compact database</button>
+      </div>
+      <div class="card"><h2>System checks</h2><div id="diag-list"></div></div>
+      <div class="card">
+        <h2>Update</h2>
+        <p class="hint">Drop a new build here and the running install becomes that
+        version. Your settings, database and virtual environment are left alone, and
+        the previous version is backed up first so it can be put back.</p>
+        <div class="dropzone" id="dropzone">
+          <input type="file" id="package-file" accept=".zip" hidden>
+          <b>Drop a wifirecon zip here</b>
+          <span>or <button class="btn small" id="btn-browse">choose a file</button></span>
+        </div>
+        <div id="package-info"></div>
+        <div class="toolbar" style="margin-top:12px">
+          <button class="btn" id="btn-backup">Back up current version</button>
+          <div class="spacer"></div>
+          <select id="backup-select" style="max-width:280px">
+            <option value="">Previous versions&hellip;</option>
+          </select>
+          <button class="btn danger small" id="btn-rollback" disabled>Roll back</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Recent log</h2>
+        <pre class="mono" id="log-tail" style="max-height:300px;overflow:auto;margin:0;color:var(--dim);white-space:pre-wrap"></pre>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="view" id="view-settings" hidden>
+      <div class="grid two">
+        <div class="card">
+          <h2>Scanning</h2>
+          <div class="field">
+            <label for="set-interval">Seconds between scans</label>
+            <input type="number" id="set-interval" min="5" max="3600">
+            <div class="note">Windows throttles scan requests to about four a minute, so anything under 16 seconds just reads the same cached list.</div>
+          </div>
+          <div class="field">
+            <label for="set-settle">Settle time before reading results</label>
+            <input type="number" id="set-settle" min="0" max="30">
+            <div class="note">How long to wait after asking the driver to scan. Four seconds suits most adapters.</div>
+          </div>
+          <div class="field inline">
+            <input type="checkbox" id="set-autostart-scan">
+            <label for="set-autostart-scan">Resume scanning automatically when the app starts</label>
+          </div>
+          <div class="note">Off by default. With it off the app opens idle and waits for you
+          to press Start, which is usually what you want on a shared machine.</div>
+        </div>
+
+        <div class="card">
+          <h2>Detections</h2>
+          <div class="field inline">
+            <input type="checkbox" id="set-det-enabled"><label for="set-det-enabled">Run detection rules</label>
+          </div>
+          <div class="field">
+            <label for="set-lev">Lookalike sensitivity (edit distance)</label>
+            <input type="number" id="set-lev" min="0" max="4">
+            <div class="note">How many character changes still count as an impersonation of a trusted name. Two is a good default.</div>
+          </div>
+          <div class="field">
+            <label for="set-rssi-jump">Signal jump that counts as an anomaly (dB)</label>
+            <input type="number" id="set-rssi-jump" min="5" max="60">
+          </div>
+          <div class="field">
+            <label for="set-suppress">Repeat findings no more than once every (seconds)</label>
+            <input type="number" id="set-suppress" min="0" max="86400">
+          </div>
+          <div class="field">
+            <label for="set-floor">Lowest severity worth recording</label>
+            <select id="set-floor">
+              <option value="info">Info and up</option>
+              <option value="low">Low and up</option>
+              <option value="medium">Medium and up</option>
+              <option value="high">High and up</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Notifications</h2>
+          <p class="hint">Findings always land in the Findings tab. These push them somewhere else too.</p>
+          <div class="field inline">
+            <input type="checkbox" id="set-toast"><label for="set-toast">Windows notifications</label>
+            <button class="btn small" data-test-sink="toast">Test</button>
+          </div>
+          <div class="field inline">
+            <input type="checkbox" id="set-webhook"><label for="set-webhook">Send to a webhook</label>
+            <button class="btn small" data-test-sink="webhook">Test</button>
+          </div>
+          <div class="field">
+            <label for="set-webhook-url">Webhook URL</label>
+            <input type="url" id="set-webhook-url" placeholder="https://hooks.example.com/...">
+          </div>
+          <div class="field inline">
+            <input type="checkbox" id="set-syslog"><label for="set-syslog">Forward to syslog</label>
+            <button class="btn small" data-test-sink="syslog">Test</button>
+          </div>
+          <div class="field">
+            <label for="set-syslog-host">Syslog collector</label>
+            <input type="text" id="set-syslog-host" placeholder="splunk.lab.local">
+          </div>
+          <div class="grid three">
+            <div class="field">
+              <label for="set-syslog-port">Port</label>
+              <input type="number" id="set-syslog-port" min="1" max="65535">
+            </div>
+            <div class="field">
+              <label for="set-syslog-proto">Transport</label>
+              <select id="set-syslog-proto"><option value="udp">UDP</option><option value="tcp">TCP</option></select>
+            </div>
+            <div class="field">
+              <label for="set-syslog-format">Format</label>
+              <select id="set-syslog-format">
+                <option value="cef">CEF</option><option value="json">JSON</option><option value="rfc5424">RFC 5424</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Position tagging</h2>
+          <p class="hint">With a serial GPS attached, every observation gets a coordinate and the WiGLE and KML exports become useful.</p>
+          <div class="field inline">
+            <input type="checkbox" id="set-gps"><label for="set-gps">Read a GPS receiver</label>
+          </div>
+          <div class="field">
+            <label for="set-gps-port">Serial port</label>
+            <select id="set-gps-port"><option value="">None detected</option></select>
+          </div>
+          <div class="field">
+            <label for="set-gps-baud">Baud rate</label>
+            <input type="number" id="set-gps-baud" min="1200" max="921600">
+          </div>
+          <div class="note mono" id="gps-status">&mdash;</div>
+        </div>
+
+        <div class="card">
+          <h2>Storage</h2>
+          <div class="field">
+            <label for="set-obs-days">Keep signal history for (days)</label>
+            <input type="number" id="set-obs-days" min="1" max="3650">
+          </div>
+          <div class="field">
+            <label for="set-alert-days">Keep acknowledged findings for (days)</label>
+            <input type="number" id="set-alert-days" min="1" max="3650">
+          </div>
+          <div class="field">
+            <label for="set-max-db">Warn when the database passes (MB)</label>
+            <input type="number" id="set-max-db" min="64" max="1000000">
+          </div>
+        </div>
+
+        <div class="card" id="install-card" hidden>
+          <h2>Installation</h2>
+          <p class="hint" id="install-where">&mdash;</p>
+          <div class="field inline">
+            <input type="checkbox" id="set-autostart"><label for="set-autostart">Start when I sign in</label>
+          </div>
+          <div class="toolbar" style="margin-top:12px">
+            <button class="btn" id="btn-install">Install properly</button>
+            <button class="btn danger" id="btn-uninstall">Uninstall wifirecon</button>
+          </div>
+          <div class="note" id="install-note"></div>
+        </div>
+
+        <div class="card">
+          <h2>Access and updates</h2>
+          <div class="field">
+            <label for="set-port">Web port</label>
+            <input type="number" id="set-port" min="1" max="65535">
+            <div class="note">Takes effect the next time the app starts.</div>
+          </div>
+          <div class="field inline">
+            <input type="checkbox" id="set-lan"><label for="set-lan">Reachable from other machines</label>
+          </div>
+          <div class="note">Turning this on generates an API token and requires it on every request. Leave it off unless you need it.</div>
+          <div class="field inline" style="margin-top:12px">
+            <input type="checkbox" id="set-update-check"><label for="set-update-check">Check for updates automatically</label>
+          </div>
+          <div class="field">
+            <label for="set-channel">Update channel</label>
+            <input type="text" id="set-channel" placeholder="main">
+          </div>
+          <div class="field">
+            <label for="set-theme">Appearance</label>
+            <select id="set-theme">
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+              <option value="system">Match Windows</option>
+            </select>
+          </div>
+          <div class="field inline">
+            <input type="checkbox" id="set-native-window">
+            <label for="set-native-window">Open in its own window, not a browser</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Data</h2>
+        <p class="hint">Everything collected lives in one database. These clear parts
+        of it. None of it can be undone.</p>
+        <div class="toolbar">
+          <button class="btn" id="btn-clear-networks">Clear networks &amp; findings</button>
+          <button class="btn" id="btn-compact-db">Compact database</button>
+          <div class="spacer"></div>
+          <button class="btn danger" id="btn-wipe">Wipe everything&hellip;</button>
+        </div>
+        <div class="note" id="data-status" style="margin-top:10px"></div>
+      </div>
+
+      <div class="toolbar">
+        <button class="btn primary" id="btn-save-settings">Save settings</button>
+        <button class="btn danger" id="btn-reset-settings">Reset to defaults</button>
+        <div class="spacer"></div>
+        <span class="mono dim" id="settings-status"></span>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="drawer-back" id="drawer-back"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-label="Access point detail">
+  <header>
+    <div>
+      <h2 id="drawer-title">&mdash;</h2>
+      <div class="mono dim" id="drawer-sub"></div>
+    </div>
+    <button class="close" id="drawer-close" aria-label="Close">&times;</button>
+  </header>
+  <div class="body" id="drawer-body"></div>
+</aside>
+
+<div class="toasts" id="toasts"></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
