@@ -661,7 +661,7 @@ virtual environment are never touched.
 The updater looks for releases at the repository named in `app/updater.py`:
 
 ```python
-REPO = "Seth-Smithey/wifirecon-win"
+REPO = "Seth-Smithey/wifirecon-windows"
 ```
 
 The release updater has no GitHub authentication for private releases;

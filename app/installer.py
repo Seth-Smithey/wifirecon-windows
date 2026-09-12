@@ -119,7 +119,7 @@ def register_uninstaller(target: Path, version: str) -> bool:
                 "InstallLocation": str(target.parent),
                 "UninstallString": f'"{target}" --uninstall',
                 "QuietUninstallString": f'"{target}" --uninstall --quiet',
-                "URLInfoAbout": "https://github.com/Seth-Smithey/wifirecon-win",
+                "URLInfoAbout": "https://github.com/Seth-Smithey/wifirecon-windows",
                 "Comments": "Passive wireless reconnaissance for Windows",
             }
             for name, value in values.items():

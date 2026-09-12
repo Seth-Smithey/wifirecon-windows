@@ -280,7 +280,7 @@ when any check fails.
 The updater looks for GitHub releases at the repo named in `app/updater.py`:
 
 ```python
-REPO = "Seth-Smithey/wifirecon-win"
+REPO = "Seth-Smithey/wifirecon-windows"
 ```
 
 Change that to wherever you actually put it, then:
