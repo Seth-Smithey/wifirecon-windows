@@ -38,7 +38,7 @@ you ask for them.
 | `ssid_conflict` | high | One SSID served with inconsistent security across BSSIDs. Enterprise and PSK count as different postures. |
 | `security_downgrade` | high | A BSSID now advertising weaker security than it did before. Config change, or someone reusing the MAC. |
 | `mixed_script_ssid` | medium | A name mixing Latin with another alphabet. |
-| `lure_ssid` | medium | An open network using a name devices auto-join, such as `attwifi`. |
+| `lure_ssid` | medium | An open network using a name devices auto-join, such as `Example_Network_08`. |
 | `bssid_multi_ssid` | high | One radio answering to more names than a multi-BSSID AP plausibly would. |
 | `randomized_bssid` | high / info | Locally administered MAC. Routine for phone hotspots, notable on a tracked SSID. |
 | `vendor_mismatch` | medium | A tracked network appearing on hardware from a vendor it has never used. |

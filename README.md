@@ -62,7 +62,8 @@ Then double-click `wifirecon.vbs` (or use `Start wifirecon (console).cmd`).
 For a packaged build, download the `wifirecon-windows` artifact from a successful
 GitHub Actions run, or the application ZIP from Releases when one is published.
 Extract it and keep `wifirecon.exe` with its `_internal` folder. Python is bundled.
-This is a private repository; sign in to GitHub to access downloads.
+Sign in to GitHub when a download requires it. See [SECURITY.md](SECURITY.md)
+for reporting vulnerabilities and handling survey data safely.
 
 **Just run it.** Double-click. It opens its own window — Qt widgets, drawn
 natively, no Edge and no WebView2 — and the console hides itself. Everything
@@ -107,9 +108,9 @@ For a folder build, close the app and extract the new ZIP into a new folder.
 Run the new executable with its supporting files. Survey data remains under
 `%LOCALAPPDATA%\wifirecon-win` unless you configured a custom data directory.
 
-The built-in release updater has no GitHub authentication and cannot download
-private releases. It can replace single-file executables, but cannot install
-folder ZIPs automatically. Use the signed-in GitHub download workflow above.
+The built-in release updater supports public releases. It can replace
+single-file executables, but cannot install
+folder ZIPs automatically. Download the complete folder ZIP instead.
 
 ### Shipping an update
 

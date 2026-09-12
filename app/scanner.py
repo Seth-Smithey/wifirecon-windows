@@ -166,7 +166,7 @@ def stable_elements(info: dict) -> list[str]:
 
 def ie_fingerprint(info: dict) -> str:
     parts = stable_elements(info)
-    digest = hashlib.sha1("|".join(parts).encode("utf-8")).hexdigest()[:16]
+    digest = hashlib.sha1("|".join(parts).encode("utf-8"), usedforsecurity=False).hexdigest()[:16]
     return f"{FINGERPRINT_VERSION}:{digest}"
 
 

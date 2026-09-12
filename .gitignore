@@ -26,3 +26,17 @@ HANDOFF.md
 reports/
 backups/
 .repo-audit/
+.audit/
+config.json
+manuf
+exports/
+surveys/
+*.pcap
+*.pcapng
+*.har
+*.kml
+*.kmz
+*.key
+*.pem
+*.pfx
+*.p12
