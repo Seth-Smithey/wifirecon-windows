@@ -177,16 +177,19 @@ if ($Release) {
     if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
         Say "`nThe GitHub CLI (gh) is not installed, so the release was not published." 'Yellow'
         Say "Install it from https://cli.github.com/ or upload dist\ by hand."
+        exit 1
     } else {
         $tag = "v$currentVersion"
         Say "`nPublishing release $tag..." 'Cyan'
-        $notes = "Automated build of wifirecon $currentVersion.`n`nSHA-256: $hash"
         $releaseAsset = if ($OneFile) { $exe } else { $zip }
+        $releaseHash = if ($OneFile) { $hash } else { $zipHash }
+        $notes = "Automated build of wifirecon $currentVersion.`n`nSHA-256: $releaseHash"
         & gh release create $tag $releaseAsset $checksumFile --verify-tag --title $tag --notes $notes
         if ($LASTEXITCODE -eq 0) {
             Say "Published. Download and extract the complete folder package to update a folder install." 'Green'
         } else {
             Say "gh release failed. Upload dist\ manually." 'Yellow'
+            exit 1
         }
     }
 }

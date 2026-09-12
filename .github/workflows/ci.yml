@@ -27,7 +27,7 @@ jobs:
       - run: ruff check .
 
   test:
-    name: self-checks (py${{ matrix.python }})
+    name: self-checks (${{ matrix.os }}, py${{ matrix.python }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
