@@ -28,8 +28,8 @@ WHAT YOU NEED FIRST
 THE FIRST THING TO KNOW
 -------------------------------------------------------------------
 
-  Scanning is PASSIVE and needs NO network connection. The adapter
-  listens for beacons; it never joins anything and never transmits.
+  Surveying needs NO network connection and does not request joining
+  a network. Windows and the driver may transmit probe requests.
   You can survey a building you have no credentials for.
 
   Two screens are the exception, and both say so and both ask first:
@@ -38,7 +38,7 @@ THE FIRST THING TO KNOW
                    machine is joined to. Not the survey adapter.
     My network   - joins a network, and can port-scan it.
 
-  Everything else only listens.
+  Wireless survey results come from the Windows Native Wifi API.
 
 
 THE FIRST THING TO DO
