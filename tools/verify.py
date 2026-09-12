@@ -227,9 +227,9 @@ def c_psc() -> str:
 def c_grouped_search() -> str:
     from app.services import networks
 
-    result = networks.grouped(search="ubiquiti")
+    result = networks.grouped(search="ExampleVendor")
     expect(result["total"] >= 1, "vendor search found nothing")
-    by_name = networks.grouped(search="smithey")
+    by_name = networks.grouped(search="example_")
     expect(by_name["total"] >= 1, "name search found nothing")
     return f"{result['total']} by vendor, {by_name['total']} by name"
 
@@ -1257,6 +1257,11 @@ def _seed() -> None:
     lifecycle.bootstrap()
     scanner.engine.start(run_loop=False)
     scanner.engine.run_once()
+    # Locally administered demo MACs deliberately identify no real vendor.
+    # Seed a synthetic vendor so grouped-search behavior remains testable.
+    with db.transaction() as conn:
+        conn.execute("UPDATE bss SET vendor=? WHERE bssid=?",
+                     ("ExampleVendor", "02:00:00:00:00:01"))
 
 
 def main() -> int:
