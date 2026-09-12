@@ -1,5 +1,14 @@
 # wifirecon-win
 
+[![CI](https://github.com/Seth-Smithey/wifirecon-windows/actions/workflows/ci.yml/badge.svg)](https://github.com/Seth-Smithey/wifirecon-windows/actions/workflows/ci.yml)
+[![Security](https://github.com/Seth-Smithey/wifirecon-windows/actions/workflows/security.yml/badge.svg)](https://github.com/Seth-Smithey/wifirecon-windows/actions/workflows/security.yml)
+[![CodeQL](https://github.com/Seth-Smithey/wifirecon-windows/actions/workflows/codeql.yml/badge.svg)](https://github.com/Seth-Smithey/wifirecon-windows/actions/workflows/codeql.yml)
+
+Download the Windows ZIP and its SHA-256 checksum from
+[Releases](https://github.com/Seth-Smithey/wifirecon-windows/releases/latest).
+Extract the complete folder before running `wifirecon.exe`. Folder installations
+update by extracting a new release package. Builds are currently unsigned.
+
 Wireless survey and inventory for Windows, built on the Native
 Wifi API. A native desktop application: no VM, no monitor mode, no driver
 replacement, and no embedded browser.
