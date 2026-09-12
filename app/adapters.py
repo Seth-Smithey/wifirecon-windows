@@ -499,7 +499,8 @@ def enumerate_adapters(source: Any, preferred_keywords: list[str] | None = None)
             except Exception as exc:
                 log.warning("Could not describe %s: %s", entry.get("description"), exc)
                 info = {"guid": entry.get("guid"), "description": entry.get("description"),
-                        "state": entry.get("state"), "error": str(exc),
+                        "state": entry.get("state"),
+                        "error": "Could not read adapter details. See the local log.",
                         "label": entry.get("description"), "external": False,
                         "bands": [], "summary": entry.get("description", "Adapter")}
             info["score"] = preference_score(info, preferred_keywords)

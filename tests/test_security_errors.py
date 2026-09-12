@@ -3,15 +3,29 @@
 import asyncio
 import ssl
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
-from app import netaudit
+from app import adapters, netaudit
 from app.alerts import AlertDispatcher
 from app.api import routes
 from app.detections import Finding
 
 
 class SecurityErrorTests(unittest.TestCase):
+    def test_adapter_description_failure_does_not_publish_exception(self):
+        source = Mock(name="mock")
+        source.interfaces.return_value = [{"guid": "example", "description": "Example adapter"}]
+        private_detail = "private-adapter-diagnostic"
+        with (
+            patch.object(adapters, "describe", side_effect=RuntimeError(private_detail)),
+            self.assertLogs("app.adapters", level="WARNING") as captured,
+        ):
+            result = adapters.enumerate_adapters(source)
+        self.assertEqual(len(result), 1)
+        self.assertTrue(result[0]["error"])
+        self.assertNotIn(private_detail, str(result))
+        self.assertIn(private_detail, " ".join(captured.output))
+
     def test_install_failure_keeps_exception_in_local_log(self):
         private_detail = "private-path-and-sensitive-diagnostic"
         with (
