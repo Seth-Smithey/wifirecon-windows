@@ -203,7 +203,7 @@ class GpsReader:
                                 merged["ts"] = time.time()
                                 self._fix = merged
             except Exception as exc:
-                self._error = str(exc)
+                self._error = "GPS port unavailable. See the local log for details."
                 log.warning("GPS port %s unavailable: %s", self._port, exc)
             if self._stop.wait(backoff):
                 break

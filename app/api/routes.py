@@ -907,7 +907,7 @@ async def install_status() -> dict:
             "registered": False,
             "autostart": False,
             "version": runtime.version(),
-            "error": str(exc),
+            "error": "Could not read installation status. See the local log for details.",
         }
 
 
